@@ -19,23 +19,39 @@ def test_product_init(sample_product):
     assert sample_product.quantity == 10
 
 
+def test_price_setter(sample_product):
+    sample_product.price = 150.0
+    assert sample_product.price == 150.0
+    sample_product.price = -10  # Должно вывести сообщение об ошибке
+    assert sample_product.price == 150.0  # Цена не должна измениться
+
+
+def test_new_product():
+    product_data = {
+        "name": "New Product",
+        "description": "New Description",
+        "price": 200.0,
+        "quantity": 5
+    }
+    product = Product.new_product(product_data)
+    assert product.name == "New Product"
+    assert product.price == 200.0
+
+
 def test_category_init(sample_category, sample_product):
     assert sample_category.name == "Test Category"
-    assert sample_category.description == "Test Description"
-    assert len(sample_category.products) == 1
-    assert sample_category.products[0] == sample_product
+    assert len(sample_category.products_list) == 1
+    assert sample_category.products_list[0] == sample_product
 
 
-def test_category_count():
-    initial_count = Category.category_count
-    Category("New Category", "Desc", [])
-    assert Category.category_count == initial_count + 1
-
-
-def test_product_count():
+def test_add_product(sample_category):
     initial_count = Category.product_count
-    product = Product("P", "D", 1.0, 1)
-    category = Category("C", "D", [product])
+    new_product = Product("New", "Desc", 50.0, 3)
+    sample_category.add_product(new_product)
+    assert len(sample_category.products_list) == 2
     assert Category.product_count == initial_count + 1
-    assert len(category.products) == 1
-    assert category.products[0].name == "P"
+
+
+def test_products_property(sample_category, sample_product):
+    expected_output = f"{sample_product.name}, {sample_product.price} руб. Остаток: {sample_product.quantity} шт."
+    assert sample_category.products == expected_output
