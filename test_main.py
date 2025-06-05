@@ -12,30 +12,47 @@ def sample_category(sample_product):
     return Category("Test Category", "Test Description", [sample_product])
 
 
-def test_product_init(sample_product):
-    assert sample_product.name == "Test Product"
-    assert sample_product.description == "Test Description"
-    assert sample_product.price == 100.0
-    assert sample_product.quantity == 10
+def test_private_price_attribute(sample_product):
+    # Проверка, что атрибут действительно приватный
+    with pytest.raises(AttributeError):
+        sample_product.__price
 
 
-def test_category_init(sample_category, sample_product):
-    assert sample_category.name == "Test Category"
-    assert sample_category.description == "Test Description"
-    assert len(sample_category.products) == 1
-    assert sample_category.products[0] == sample_product
+def test_price_getter_setter(sample_product):
+    assert sample_product.price == 100.0  # Проверка геттера
+    sample_product.price = 150.0
+    assert sample_product.price == 150.0  # Проверка сеттера
+    sample_product.price = -10  # Должно вывести сообщение об ошибке
+    assert sample_product.price == 150.0  # Цена не должна измениться
 
 
-def test_category_count():
-    initial_count = Category.category_count
-    Category("New Category", "Desc", [])
-    assert Category.category_count == initial_count + 1
+def test_add_product_type_check(sample_category):
+    class FakeProduct: pass
+
+    with pytest.raises(TypeError):
+        sample_category.add_product(FakeProduct())  # Неправильный тип
+    with pytest.raises(TypeError):
+        sample_category.add_product("not a product")  # Неправильный тип
+
+    # Проверка добавления настоящего продукта
+    initial_count = len(sample_category.products_list)
+    new_product = Product("Valid", "Product", 50.0, 3)
+    sample_category.add_product(new_product)
+    assert len(sample_category.products_list) == initial_count + 1
 
 
-def test_product_count():
-    initial_count = Category.product_count
-    product = Product("P", "D", 1.0, 1)
-    category = Category("C", "D", [product])
-    assert Category.product_count == initial_count + 1
-    assert len(category.products) == 1
-    assert category.products[0].name == "P"
+def test_new_product_classmethod():
+    product_data = {
+        "name": "New Product",
+        "description": "New Description",
+        "price": 200.0,
+        "quantity": 5
+    }
+    product = Product.new_product(product_data)
+    assert isinstance(product, Product)
+    assert product.name == "New Product"
+
+
+def test_products_property_formatting(sample_category, sample_product):
+    expected_output = f"{sample_product.name}, {sample_product.price} руб. Остаток: {sample_product.quantity} шт."
+    assert sample_category.products == expected_output
