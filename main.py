@@ -1,58 +1,81 @@
-import pytest
-from main import Product, Category
+class Product:
+    def __init__(self, name: str, description: str, price: float, quantity: int):
+        self.name = name
+        self.description = description
+        self.__price = price  # Полностью приватный атрибут
+        self.quantity = quantity
+
+    @property
+    def price(self):
+        return self.__price
+
+    @price.setter
+    def price(self, new_price: float):
+        if new_price > 0:
+            self.__price = new_price
+        else:
+            print("Цена не должна быть нулевая или отрицательная")
+
+    @classmethod
+    def new_product(cls, product_data: dict):
+        return cls(
+            name=product_data['name'],
+            description=product_data['description'],
+            price=product_data['price'],
+            quantity=product_data['quantity']
+        )
 
 
-@pytest.fixture
-def sample_product():
-    return Product("Test Product", "Test Description", 100.0, 10)
+class Category:
+    category_count = 0
+    product_count = 0
+
+    def __init__(self, name: str, description: str, products: list[Product]):
+        self.name = name
+        self.description = description
+        self.__products = products  # Приватный атрибут
+        Category.category_count += 1
+        Category.product_count += len(products)
+
+    def add_product(self, product):
+        if isinstance(product, Product):  # Проверка типа
+            self.__products.append(product)
+            Category.product_count += 1
+        else:
+            raise TypeError("Можно добавлять только объекты класса Product")
+
+    @property
+    def products(self):
+        return "\n".join(
+            [f"{product.name}, {product.price} руб. Остаток: {product.quantity} шт."
+             for product in self.__products]
+        )
+
+    @property
+    def products_list(self):
+        return self.__products
 
 
-@pytest.fixture
-def sample_category(sample_product):
-    return Category("Test Category", "Test Description", [sample_product])
+if __name__ == "__main__":
+    # Тестовые данные
+    product1 = Product("Samsung Galaxy S23 Ultra", "256GB, Серый цвет, 200MP камера", 180000.0, 5)
+    product2 = Product("Iphone 15", "512GB, Gray space", 210000.0, 8)
+    product3 = Product("Xiaomi Redmi Note 11", "1024GB, Синий", 31000.0, 14)
 
+    category1 = Category(
+        "Смартфоны",
+        "Смартфоны, как средство не только коммуникации, но и получения дополнительных функций для удобства жизни",
+        [product1, product2, product3]
+    )
 
-def test_private_price_attribute(sample_product):
-    # Проверка, что атрибут действительно приватный
-    with pytest.raises(AttributeError):
-        sample_product.__price
+    print(category1.products)
+    product4 = Product("55\" QLED 4K", "Фоновая подсветка", 123000.0, 7)
+    category1.add_product(product4)
+    print(category1.products)
+    print(f"Общее количество продуктов: {Category.product_count}")
 
-
-def test_price_getter_setter(sample_product):
-    assert sample_product.price == 100.0  # Проверка геттера
-    sample_product.price = 150.0
-    assert sample_product.price == 150.0  # Проверка сеттера
-    sample_product.price = -10  # Должно вывести сообщение об ошибке
-    assert sample_product.price == 150.0  # Цена не должна измениться
-
-
-def test_add_product_type_check(sample_category):
-    class FakeProduct: pass
-
-    with pytest.raises(TypeError):
-        sample_category.add_product(FakeProduct())  # Неправильный тип
-    with pytest.raises(TypeError):
-        sample_category.add_product("not a product")  # Неправильный тип
-
-    # Проверка добавления настоящего продукта
-    initial_count = len(sample_category.products_list)
-    new_product = Product("Valid", "Product", 50.0, 3)
-    sample_category.add_product(new_product)
-    assert len(sample_category.products_list) == initial_count + 1
-
-
-def test_new_product_classmethod():
-    product_data = {
-        "name": "New Product",
-        "description": "New Description",
-        "price": 200.0,
-        "quantity": 5
-    }
-    product = Product.new_product(product_data)
-    assert isinstance(product, Product)
-    assert product.name == "New Product"
-
-
-def test_products_property_formatting(sample_category, sample_product):
-    expected_output = f"{sample_product.name}, {sample_product.price} руб. Остаток: {sample_product.quantity} шт."
-    assert sample_category.products == expected_output
+    # Проверка добавления некорректного типа
+    try:
+        category1.add_product("Not a product")
+    except TypeError as e:
+        print(f"Ошибка: {e}")
