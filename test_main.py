@@ -8,34 +8,38 @@ def sample_product():
 
 
 @pytest.fixture
-def sample_category(sample_product):
-    return Category("Test Category", "Test Description", [sample_product])
+def another_product():
+    return Product("Another Product", "Another Description", 200.0, 5)
 
 
-def test_product_init(sample_product):
-    assert sample_product.name == "Test Product"
-    assert sample_product.description == "Test Description"
-    assert sample_product.price == 100.0
-    assert sample_product.quantity == 10
+@pytest.fixture
+def sample_category(sample_product, another_product):
+    return Category("Test Category", "Test Description", [sample_product, another_product])
 
 
-def test_category_init(sample_category, sample_product):
-    assert sample_category.name == "Test Category"
-    assert sample_category.description == "Test Description"
-    assert len(sample_category.products) == 1
-    assert sample_category.products[0] == sample_product
+def test_product_str(sample_product):
+    assert str(sample_product) == "Test Product, 100.0 руб. Остаток: 10 шт."
 
 
-def test_category_count():
-    initial_count = Category.category_count
-    Category("New Category", "Desc", [])
-    assert Category.category_count == initial_count + 1
+def test_category_str(sample_category):
+    assert str(sample_category) == "Test Category, количество продуктов: 15 шт."
 
 
-def test_product_count():
-    initial_count = Category.product_count
-    product = Product("P", "D", 1.0, 1)
-    category = Category("C", "D", [product])
-    assert Category.product_count == initial_count + 1
-    assert len(category.products) == 1
-    assert category.products[0].name == "P"
+def test_product_addition(sample_product, another_product):
+    assert sample_product + another_product == 100.0 * 10 + 200.0 * 5
+
+
+def test_invalid_addition(sample_product):
+    with pytest.raises(TypeError):
+        sample_product + "Not a product"
+
+
+def test_category_products_property(sample_category):
+    expected_output = "Test Product, 100.0 руб. Остаток: 10 шт.\nAnother Product, 200.0 руб. Остаток: 5 шт."
+    assert sample_category.products == expected_output
+
+
+def test_empty_category():
+    empty_category = Category("Empty", "No products", [])
+    assert str(empty_category) == "Empty, количество продуктов: 0 шт."
+    assert empty_category.products == ""
