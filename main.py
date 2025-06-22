@@ -9,7 +9,7 @@ class Product:
         return f"{self.name}, {self.price} руб. Остаток: {self.quantity} шт."
 
     def __add__(self, other):
-        if not isinstance(other, self.__class__):
+        if self.__class__ is not other.__class__:  # Используем is для сравнения классов
             raise TypeError("Нельзя складывать товары разных классов")
         return self.price * self.quantity + other.price * other.quantity
 
@@ -45,7 +45,7 @@ class Category:
         Category.product_count += len(self.__products)
 
     def add_product(self, product):
-        if not isinstance(product, (Product, Smartphone, LawnGrass)):
+        if not any(product.__class__ is cls for cls in (Product, Smartphone, LawnGrass)):  # Используем is
             raise TypeError("Можно добавлять только объекты Product или его наследников")
         self.__products.append(product)
         Category.product_count += 1
@@ -53,6 +53,10 @@ class Category:
     @property
     def products(self):
         return "\n".join(str(product) for product in self.__products)
+
+    @property
+    def products_list(self):
+        return self.__products
 
     def __str__(self):
         total_quantity = sum(product.quantity for product in self.__products)
