@@ -16,7 +16,6 @@ def test_product_normal_creation():
 
 
 def test_category_middle_price():
-    """Проверка расчета средней цены"""
     product1 = Product("Prod1", "Desc1", 100.0, 2)
     product2 = Product("Prod2", "Desc2", 200.0, 3)
     category = Category("Test", "Test", [product1, product2])
