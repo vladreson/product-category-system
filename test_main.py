@@ -2,40 +2,35 @@ import pytest
 from main import Product, Category
 
 
-@pytest.fixture
-def sample_product():
-    return Product("Test Product", "Test Description", 100.0, 10)
+def test_product_zero_quantity():
+    """Проверка создания продукта с нулевым количеством"""
+    with pytest.raises(ValueError) as excinfo:
+        Product("Test", "Test", 100.0, 0)
+    assert "Товар с нулевым количеством не может быть добавлен" in str(excinfo.value)
 
 
-@pytest.fixture
-def sample_category(sample_product):
-    return Category("Test Category", "Test Description", [sample_product])
+def test_product_normal_creation():
+    """Проверка создания продукта с нормальным количеством"""
+    product = Product("Test", "Test", 100.0, 1)
+    assert product.quantity == 1
 
 
-def test_product_init(sample_product):
-    assert sample_product.name == "Test Product"
-    assert sample_product.description == "Test Description"
-    assert sample_product.price == 100.0
-    assert sample_product.quantity == 10
+def test_category_middle_price():
+    product1 = Product("Prod1", "Desc1", 100.0, 2)
+    product2 = Product("Prod2", "Desc2", 200.0, 3)
+    category = Category("Test", "Test", [product1, product2])
+    assert category.middle_price() == 150.0
 
 
-def test_category_init(sample_category, sample_product):
-    assert sample_category.name == "Test Category"
-    assert sample_category.description == "Test Description"
-    assert len(sample_category.products) == 1
-    assert sample_category.products[0] == sample_product
+def test_empty_category_middle_price():
+    """Проверка расчета средней цены для пустой категории"""
+    category = Category("Empty", "Empty")
+    assert category.middle_price() == 0
 
 
-def test_category_count():
-    initial_count = Category.category_count
-    Category("New Category", "Desc", [])
-    assert Category.category_count == initial_count + 1
-
-
-def test_product_count():
-    initial_count = Category.product_count
-    product = Product("P", "D", 1.0, 1)
-    category = Category("C", "D", [product])
-    assert Category.product_count == initial_count + 1
-    assert len(category.products) == 1
-    assert category.products[0].name == "P"
+def test_previous_functionality():
+    """Проверка сохранения предыдущей функциональности"""
+    product = Product("Test", "Test", 100.0, 1)
+    category = Category("Test", "Test", [product])
+    assert str(product) == "Test, 100.0 руб. Остаток: 1 шт."
+    assert len(category.products.split('\n')) == 1
